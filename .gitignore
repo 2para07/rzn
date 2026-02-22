@@ -9,3 +9,5 @@ coverage/
 dist/
 /.idea/
 public/RZN_LOGO.png
+.vercel
+.env*.local
