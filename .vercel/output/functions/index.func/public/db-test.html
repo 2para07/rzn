@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Database Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            padding: 2rem;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            border: 2px solid #ffd700;
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+        h1 {
+            color: #ffd700;
+            text-align: center;
+        }
+        .test-section {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: #1a1a1a;
+            border-radius: 0.5rem;
+            border-left: 4px solid #404040;
+        }
+        .test-section.info {
+            border-left-color: #42a5f5;
+        }
+        .test-section.success {
+            border-left-color: #4ade80;
+            background: rgba(74, 222, 128, 0.05);
+        }
+        .test-section.error {
+            border-left-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.05);
+        }
+        .status-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        code {
+            background: #0f0f0f;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            color: #ffed4e;
+        }
+        button {
+            background: #ffd700;
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #ffed4e;
+            transform: scale(1.05);
+        }
+        .instructions {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid #ffd700;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin: 2rem 0;
+        }
+        .instructions h3 {
+            color: #ffd700;
+            margin-top: 0;
+        }
+        ol {
+            line-height: 1.8;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗄️ Supabase Database Connection Test</h1>
+        
+        <div class="test-section info">
+            <h2>📋 Connection Information</h2>
+            <p><strong>Database:</strong> <code>postgres</code></p>
+            <p><strong>Host:</strong> <code>db.msdwgcserhbznsigpydf.supabase.co</code></p>
+            <p><strong>Port:</strong> <code>5432</code></p>
+            <p><strong>Status:</strong> <span id="status">Checking...</span></p>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ To Verify Your Database is Connected:</h2>
+            <ol>
+                <li>Go to: <a href="https://supabase.com/dashboard" target="_blank" style="color: #ffd700;">https://supabase.com/dashboard</a></li>
+                <li>Login with your Supabase account</li>
+                <li>Select your project: <code>msdwgcserhbznsigpydf</code></li>
+                <li>Click <strong>"SQL Editor"</strong> on the left sidebar</li>
+                <li>Run this command:
+                    <pre style="background: #0f0f0f; padding: 1rem; border-radius: 0.5rem; overflow-x: auto;">
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public';</pre>
+                </li>
+                <li>You should see these tables:
+                    <ul style="background: #0f0f0f; padding: 1rem; border-radius: 0.5rem;">
+                        <li>✓ users</li>
+                        <li>✓ activity_log</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 To Run Your Website Locally:</h2>
+            <ol>
+                <li><strong>Install Node.js:</strong> 
+                    <br>Download from <a href="https://nodejs.org/" target="_blank" style="color: #ffd700;">https://nodejs.org/</a> (LTS version)
+                </li>
+                <li><strong>Open PowerShell</strong> and navigate to your project:
+                    <pre style="background: #0f0f0f; padding: 1rem; border-radius: 0.5rem;">cd C:\Users\chris\OneDrive\Desktop\rzn-risen</pre>
+                </li>
+                <li><strong>Install dependencies:</strong>
+                    <pre style="background: #0f0f0f; padding: 1rem; border-radius: 0.5rem;">npm install</pre>
+                </li>
+                <li><strong>Start the server:</strong>
+                    <pre style="background: #0f0f0f; padding: 1rem; border-radius: 0.5rem;">npm start</pre>
+                </li>
+                <li><strong>Open your browser:</strong> 
+                    <a href="http://localhost:3000" target="_blank" style="color: #ffd700;">http://localhost:3000</a>
+                </li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Database Test</h2>
+            <button onclick="testDatabaseConnection()">Test API Connection (Requires Server Running)</button>
+            <div id="result" style="margin-top: 1rem; display: none;"></div>
+        </div>
+
+        <div class="test-section info">
+            <h2>📝 Your Supabase Credentials (from .env)</h2>
+            <pre style="background: #0f0f0f; padding: 1rem; border-radius: 0.5rem; overflow-x: auto;">
+Project ID: msdwgcserhbznsigpydf
+URL: https://msdwgcserhbznsigpydf.supabase.co
+Database: PostgreSQL @ db.msdwgcserhbznsigpydf.supabase.co:5432
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = '🟡 Awaiting Node.js installation and server startup...';
+        }
+
+        async function testDatabaseConnection() {
+            const resultEl = document.getElementById('result');
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '⏳ Testing connection...';
+
+            try {
+                const response = await fetch('/api/getMembers', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultEl.className = 'test-section success';
+                    resultEl.innerHTML = `
+                        <span class="status-icon">✅</span>
+                        <strong>Database Connection Successful!</strong>
+                        <p>Members loaded: ${data.members ? data.members.length : 0}</p>
+                    `;
+                } else {
+                    resultEl.className = 'test-section error';
+                    resultEl.innerHTML = `
+                        <span class="status-icon">❌</span>
+                        <strong>Server Error</strong>
+                        <p>Status: ${response.status}</p>
+                    `;
+                }
+            } catch (error) {
+                resultEl.className = 'test-section error';
+                resultEl.innerHTML = `
+                    <span class="status-icon">❌</span>
+                    <strong>Server Not Running</strong>
+                    <p>${error.message}</p>
+                    <p>Make sure you've installed Node.js and ran: <code>npm start</code></p>
+                `;
+            }
+        }
+
+        updateStatus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "handler": "index.js",
+  "runtime": "nodejs24.x",
+  "architecture": "x86_64",
+  "environment": {},
+  "framework": {
+    "slug": "express",
+    "version": "4.22.1"
+  },
+  "shouldDisableAutomaticFetchInstrumentation": false,
+  "launcherType": "Nodejs",
+  "shouldAddHelpers": true,
+  "shouldAddSourcemapSupport": false,
+  "awsLambdaHandler": ""
+}
