@@ -1,16 +1,5 @@
-import pg from 'pg';
 import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const { Pool } = pg;
-
-// Create database connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+import pool from './db.js';
 
 export default async function handler(req, res) {
   // Enable CORS
