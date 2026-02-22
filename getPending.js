@@ -1,5 +1,8 @@
 import pg from 'pg';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const { Pool } = pg;
 

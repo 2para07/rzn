@@ -29,8 +29,13 @@ async function apiCall(endpoint, data = {}, method = 'POST') {
         options.body = JSON.stringify(data);
     }
     
-    const response = await fetch(`/api/${endpoint}`, options);
-    return await response.json();
+    try {
+        const response = await fetch(`/api/${endpoint}`, options);
+        return await response.json();
+    } catch (error) {
+        console.error(`API call failed for ${endpoint}:`, error);
+        return { success: false, message: 'Server connection failed. Make sure the server is running.' };
+    }
 }
 
 // ========================================
@@ -38,10 +43,16 @@ async function apiCall(endpoint, data = {}, method = 'POST') {
 // ========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    checkStoredToken();
-    await loadLeaders();
-    await loadMembers();
-    setupEventListeners();
+    try {
+        checkStoredToken();
+        await loadLeaders();
+        await loadMembers();
+    } catch (error) {
+        console.error('Error loading initial data:', error);
+    } finally {
+        // Always set up event listeners regardless of API errors
+        setupEventListeners();
+    }
 });
 
 // ========================================
@@ -165,18 +176,30 @@ function handleLogout() {
 // ========================================
 
 async function loadLeaders() {
-    const result = await apiCall('getLeaders', {}, 'GET');
-    if (result.success) {
-        allLeaders = result.leaders;
-        renderLeaders();
+    try {
+        const result = await apiCall('getLeaders', {}, 'GET');
+        if (result.success) {
+            allLeaders = result.leaders;
+            renderLeaders();
+        } else {
+            console.warn('Failed to load leaders:', result.message);
+        }
+    } catch (error) {
+        console.error('Error loading leaders:', error);
     }
 }
 
 async function loadMembers() {
-    const result = await apiCall('getMembers', {}, 'GET');
-    if (result.success) {
-        allMembers = result.members;
-        renderMembers();
+    try {
+        const result = await apiCall('getMembers', {}, 'GET');
+        if (result.success) {
+            allMembers = result.members;
+            renderMembers();
+        } else {
+            console.warn('Failed to load members:', result.message);
+        }
+    } catch (error) {
+        console.error('Error loading members:', error);
     }
 }
 
@@ -226,11 +249,12 @@ async function loadPendingMembers() {
                     <p>Applied: ${new Date(member.created_at).toLocaleDateString()}</p>
                 </div>
                 <div class="pending-actions">
-                    <button class="approve-btn" onclick="approveMember(${member.id})">✓ Approve</button>
-                    <button class="decline-btn" onclick="declineMember(${member.id})">✗ Decline</button>
+                    <button class="approve-btn" data-member-id="${member.id}" data-action="approve">✓ Approve</button>
+                    <button class="decline-btn" data-member-id="${member.id}" data-action="decline">✗ Decline</button>
                 </div>
             </div>
         `).join('');
+        attachPendingButtonListeners();
     } else {
         noPending.style.display = 'block';
         container.innerHTML = '';
@@ -279,12 +303,13 @@ async function loadAllMembers() {
                         </div>
                         ${canDelete ? `
                             <div class="pending-actions">
-                                <button class="decline-btn" onclick="deleteMemberById(${member.id}, '${member.username}')">🗑️ Delete</button>
+                                <button class="decline-btn delete-member-btn" data-member-id="${member.id}" data-username="${member.username}">🗑️ Delete</button>
                             </div>
                         ` : ''}
                     </div>
                 `;
             }).join('');
+            attachMembersButtonListeners();
         } else {
             section.style.display = 'none';
             subtitle.textContent = '⚔️ Co-Founder Panel';
@@ -483,6 +508,36 @@ function setupEventListeners() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             navigateTo(e.target.dataset.page);
+        });
+    });
+}
+
+// ========================================
+// DYNAMIC BUTTON EVENT LISTENERS
+// ========================================
+
+function attachPendingButtonListeners() {
+    document.querySelectorAll('.pending-actions .approve-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const memberId = e.target.dataset.memberId;
+            await approveMember(memberId);
+        });
+    });
+    
+    document.querySelectorAll('.pending-actions .decline-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const memberId = e.target.dataset.memberId;
+            await declineMember(memberId);
+        });
+    });
+}
+
+function attachMembersButtonListeners() {
+    document.querySelectorAll('.delete-member-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const memberId = e.target.dataset.memberId;
+            const username = e.target.dataset.username;
+            await deleteMemberById(memberId, username);
         });
     });
 }

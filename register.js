@@ -1,5 +1,8 @@
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const { Pool } = pg;
 

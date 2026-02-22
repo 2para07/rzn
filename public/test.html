@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RZN - Risen | Connection Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            padding: 2rem;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            border: 2px solid #ffd700;
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+        h1 {
+            color: #ffd700;
+            text-align: center;
+        }
+        .status {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 4px solid #ffd700;
+        }
+        .status.error {
+            background: rgba(255, 107, 107, 0.1);
+            border-left-color: #ff6b6b;
+        }
+        .status.success {
+            background: rgba(74, 222, 128, 0.1);
+            border-left-color: #4ade80;
+        }
+        button {
+            background: #ffd700;
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #ffed4e;
+            transform: scale(1.05);
+        }
+        .button-test {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        #output {
+            background: #1a1a1a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 RZN - Risen Connection Test</h1>
+        
+        <div class="status" id="jsStatus">
+            ✅ JavaScript loaded successfully
+        </div>
+        
+        <div class="status" id="serverStatus">
+            Testing server connection...
+        </div>
+        
+        <div class="button-test">
+            <h3>Button Test:</h3>
+            <button onclick="testNavigate('home')">Go Home</button>
+            <button onclick="testNavigate('members')">View Members</button>
+            <button onclick="testNavigate('login')">Login</button>
+        </div>
+        
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const line = `[${timestamp}] ${message}`;
+            output.innerHTML += line + '<br>';
+            output.scrollTop = output.scrollHeight;
+            console.log(line);
+        }
+
+        function testNavigate(page) {
+            log(`✓ Button clicked: ${page}`, 'success');
+            // Navigate to the main page
+            window.location.href = `index.html#${page}`;
+        }
+
+        async function testServerConnection() {
+            log('Attempting to connect to server...');
+            try {
+                const response = await fetch('/api/getLeaders', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('serverStatus').innerHTML = '<strong>✅ Server is running</strong>';
+                    document.getElementById('serverStatus').className = 'status success';
+                    log('✓ Server connection successful', 'success');
+                } else {
+                    document.getElementById('serverStatus').innerHTML = '<strong>⚠️ Server responded but with error</strong>';
+                    document.getElementById('serverStatus').className = 'status error';
+                    log(`✗ Server error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                document.getElementById('serverStatus').innerHTML = '<strong>❌ Server is not running</strong><br><small>Make sure to run: npm install && npm start</small>';
+                document.getElementById('serverStatus').className = 'status error';
+                log(`✗ Server connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Run tests on page load
+        log('Page loaded');
+        testServerConnection();
+    </script>
+</body>
+</html>
