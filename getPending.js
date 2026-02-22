@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     }
 
     const result = await pool.query(`
-      SELECT id, username, email, created_at 
+      SELECT id, username, email, avatar, created_at 
       FROM users 
       WHERE role = 'pending' 
       ORDER BY created_at DESC

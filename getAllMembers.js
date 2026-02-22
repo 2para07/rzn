@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     // Leader sees all members
     if (decoded.role === 'leader') {
       query = `
-        SELECT id, username, email, role, created_at 
+        SELECT id, username, email, avatar, role, created_at 
         FROM users 
         ORDER BY 
           CASE role 
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     } else {
       // Admin only sees members and pending
       query = `
-        SELECT id, username, email, role, created_at 
+        SELECT id, username, email, avatar, role, created_at 
         FROM users 
         WHERE role IN ('member', 'pending') 
         ORDER BY created_at DESC

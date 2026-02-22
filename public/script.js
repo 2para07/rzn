@@ -15,7 +15,6 @@ async function apiCall(endpoint, data = {}, method = 'POST') {
         'Content-Type': 'application/json',
     };
     
-    // Add auth token if available
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -50,7 +49,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Error loading initial data:', error);
     } finally {
-        // Always set up event listeners regardless of API errors
         setupEventListeners();
     }
 });
@@ -71,61 +69,59 @@ function checkStoredToken() {
 }
 
 function updateAuthUI() {
-    const loginNavBtn = document.getElementById('loginNavBtn');
+    const loginNavBtn    = document.getElementById('loginNavBtn');
     const registerNavBtn = document.getElementById('registerNavBtn');
-    const profileNavBtn = document.getElementById('profileNavBtn');
-    const adminNavBtn = document.getElementById('adminNavBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
+    const profileNavBtn  = document.getElementById('profileNavBtn');
+    const adminNavBtn    = document.getElementById('adminNavBtn');
+    const logoutBtn      = document.getElementById('logoutBtn');
 
     if (currentUser) {
-        loginNavBtn.style.display = 'none';
+        loginNavBtn.style.display    = 'none';
         registerNavBtn.style.display = 'none';
-        profileNavBtn.style.display = 'block';
-        logoutBtn.style.display = 'block';
+        profileNavBtn.style.display  = 'block';
+        logoutBtn.style.display      = 'block';
         
         if (currentUser.role === 'admin' || currentUser.role === 'leader') {
             adminNavBtn.style.display = 'block';
         }
     } else {
-        loginNavBtn.style.display = 'block';
+        loginNavBtn.style.display    = 'block';
         registerNavBtn.style.display = 'block';
-        profileNavBtn.style.display = 'none';
-        adminNavBtn.style.display = 'none';
-        logoutBtn.style.display = 'none';
+        profileNavBtn.style.display  = 'none';
+        adminNavBtn.style.display    = 'none';
+        logoutBtn.style.display      = 'none';
     }
 }
 
 async function handleRegister() {
-    const username = document.getElementById('regUsername').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const password = document.getElementById('regPassword').value;
-    const errorEl = document.getElementById('registerError');
+    const username  = document.getElementById('regUsername').value.trim();
+    const email     = document.getElementById('regEmail').value.trim();
+    const password  = document.getElementById('regPassword').value;
+    const errorEl   = document.getElementById('registerError');
     const successEl = document.getElementById('registerSuccess');
     
-    errorEl.style.display = 'none';
+    errorEl.style.display   = 'none';
     successEl.style.display = 'none';
     
     if (!username || !email || !password) {
-        errorEl.textContent = 'All fields are required';
-        errorEl.style.display = 'block';
+        errorEl.textContent    = 'All fields are required';
+        errorEl.style.display  = 'block';
         return;
     }
     
     const result = await apiCall('register', { username, email, password });
     
     if (result.success) {
-        successEl.textContent = result.message;
+        successEl.textContent  = result.message;
         successEl.style.display = 'block';
         
         document.getElementById('regUsername').value = '';
-        document.getElementById('regEmail').value = '';
+        document.getElementById('regEmail').value    = '';
         document.getElementById('regPassword').value = '';
         
-        setTimeout(() => {
-            navigateTo('login');
-        }, 2000);
+        setTimeout(() => navigateTo('login'), 2000);
     } else {
-        errorEl.textContent = result.message;
+        errorEl.textContent   = result.message;
         errorEl.style.display = 'block';
     }
 }
@@ -133,12 +129,12 @@ async function handleRegister() {
 async function handleLogin() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
-    const errorEl = document.getElementById('loginError');
+    const errorEl  = document.getElementById('loginError');
     
     errorEl.style.display = 'none';
     
     if (!username || !password) {
-        errorEl.textContent = 'Username and password are required';
+        errorEl.textContent   = 'Username and password are required';
         errorEl.style.display = 'block';
         return;
     }
@@ -146,10 +142,9 @@ async function handleLogin() {
     const result = await apiCall('login', { username, password });
     
     if (result.success) {
-        authToken = result.token;
+        authToken   = result.token;
         currentUser = result.user;
         
-        // Store in localStorage
         localStorage.setItem('rzn_auth_token', authToken);
         localStorage.setItem('rzn_user', JSON.stringify(currentUser));
         
@@ -157,13 +152,13 @@ async function handleLogin() {
         navigateTo('profile');
         loadProfileData();
     } else {
-        errorEl.textContent = result.message;
+        errorEl.textContent   = result.message;
         errorEl.style.display = 'block';
     }
 }
 
 function handleLogout() {
-    authToken = null;
+    authToken   = null;
     currentUser = null;
     localStorage.removeItem('rzn_auth_token');
     localStorage.removeItem('rzn_user');
@@ -181,8 +176,6 @@ async function loadLeaders() {
         if (result.success) {
             allLeaders = result.leaders;
             renderLeaders();
-        } else {
-            console.warn('Failed to load leaders:', result.message);
         }
     } catch (error) {
         console.error('Error loading leaders:', error);
@@ -195,8 +188,6 @@ async function loadMembers() {
         if (result.success) {
             allMembers = result.members;
             renderMembers();
-        } else {
-            console.warn('Failed to load members:', result.message);
         }
     } catch (error) {
         console.error('Error loading members:', error);
@@ -206,36 +197,46 @@ async function loadMembers() {
 function loadProfileData() {
     if (!currentUser) return;
     
-    const profileName = document.getElementById('profileName');
-    const profileRole = document.getElementById('profileRole');
-    const profileRoleField = document.getElementById('profileRoleField');
-    const profileAvatarPreview = document.getElementById('profileAvatarPreview');
-    const facebookInput = document.getElementById('facebookInput');
-    const youtubeInput = document.getElementById('youtubeInput');
-    const tiktokInput = document.getElementById('tiktokInput');
+    const DEFAULT_AVATAR = 'https://scontent.fmnl17-2.fna.fbcdn.net/v/t1.15752-9/614028794_814902111608713_6082913412308559520_n.png?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_ohc=IhuL5cPSz_IQ7kNvwGNekyk&_nc_oc=AdmcTimEiyq7WGiYHgQ2XQ7dL4meLx7Y-GNrLY_qTSNuZxnmHULv_mrm1GfSBzYv2n4&_nc_zt=23&_nc_ht=scontent.fmnl17-2.fna&oh=03_Q7cD4QHwL_9xMqnBXvOjKjJ42VhsBH4jmJcQy4oIS1xBeypYsw&oe=69988514';
+
+    document.getElementById('profileName').textContent = currentUser.username;
     
-    profileName.textContent = currentUser.username;
-    
+    const roleField = document.getElementById('profileRoleField');
+    const roleEl    = document.getElementById('profileRole');
+
     if (currentUser.role === 'leader') {
-        profileRole.textContent = '👑 LEADER';
-        profileRole.style.color = '#ffd700';
-        profileRoleField.style.display = 'flex';
+        roleEl.textContent    = '👑 LEADER';
+        roleEl.style.color    = '#ffd700';
+        roleField.style.display = 'flex';
     } else if (currentUser.role === 'admin') {
-        profileRole.textContent = '⚔️ CO-FOUNDER';
-        profileRole.style.color = '#c0c0c0';
-        profileRoleField.style.display = 'flex';
+        roleEl.textContent    = '⚔️ CO-FOUNDER';
+        roleEl.style.color    = '#c0c0c0';
+        roleField.style.display = 'flex';
     } else {
-        profileRoleField.style.display = 'none';
+        roleField.style.display = 'none';
     }
     
-    profileAvatarPreview.src = currentUser.avatar || 'https://scontent.fmnl17-2.fna.fbcdn.net/v/t1.15752-9/614028794_814902111608713_6082913412308559520_n.png?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_ohc=IhuL5cPSz_IQ7kNvwGNekyk&_nc_oc=AdmcTimEiyq7WGiYHgQ2XQ7dL4meLx7Y-GNrLY_qTSNuZxnmHULv_mrm1GfSBzYv2n4&_nc_zt=23&_nc_ht=scontent.fmnl17-2.fna&oh=03_Q7cD4QHwL_9xMqnBXvOjKjJ42VhsBH4jmJcQy4oIS1xBeypYsw&oe=69988514';
-    facebookInput.value = currentUser.facebook_url || '';
-    youtubeInput.value = currentUser.youtube_url || '';
-    tiktokInput.value = currentUser.tiktok_url || '';
+    document.getElementById('profileAvatarPreview').src = currentUser.avatar || DEFAULT_AVATAR;
+    document.getElementById('facebookInput').value = currentUser.facebook_url || '';
+    document.getElementById('youtubeInput').value  = currentUser.youtube_url  || '';
+    document.getElementById('tiktokInput').value   = currentUser.tiktok_url   || '';
+}
+
+// ========================================
+// ADMIN PANEL - PENDING MEMBERS
+// ========================================
+
+function getInitial(name) {
+    return (name || '?').charAt(0).toUpperCase();
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 async function loadPendingMembers() {
-    const result = await apiCall('getPending', {}, 'GET');
+    const result    = await apiCall('getPending', {}, 'GET');
     const container = document.getElementById('pendingContainer');
     const noPending = document.getElementById('noPending');
     
@@ -243,11 +244,20 @@ async function loadPendingMembers() {
         noPending.style.display = 'none';
         container.innerHTML = result.pending.map(member => `
             <div class="pending-card">
-                <div class="pending-info">
-                    <h3>${member.username}</h3>
-                    <p>Email: ${member.email}</p>
-                    <p>Applied: ${new Date(member.created_at).toLocaleDateString()}</p>
+                <div class="pending-card-header">
+                    <div class="pending-avatar">
+                        ${member.avatar
+                            ? `<img src="${member.avatar}" alt="${member.username}">`
+                            : getInitial(member.username)
+                        }
+                    </div>
+                    <div class="pending-meta">
+                        <div class="pending-name">${member.username} <span class="role-badge role-pending">⏳ Pending</span></div>
+                        <div class="pending-email">📧 ${member.email}</div>
+                        <div class="pending-date">🗓 Applied ${formatDate(member.created_at)}</div>
+                    </div>
                 </div>
+                <div class="pending-divider"></div>
                 <div class="pending-actions">
                     <button class="approve-btn" data-member-id="${member.id}" data-action="approve">✓ Approve</button>
                     <button class="decline-btn" data-member-id="${member.id}" data-action="decline">✗ Decline</button>
@@ -257,68 +267,71 @@ async function loadPendingMembers() {
         attachPendingButtonListeners();
     } else {
         noPending.style.display = 'block';
-        container.innerHTML = '';
-    }
-}
-
-async function loadAllMembers() {
-    const result = await apiCall('getAllMembers', {}, 'GET');
-    const container = document.getElementById('allMembersContainer');
-    const section = document.getElementById('allMembersSection');
-    const subtitle = document.getElementById('adminSubtitle');
-    
-    if (result.success) {
-        const isLeader = result.currentRole === 'leader';
-        
-        if (isLeader) {
-            section.style.display = 'block';
-            subtitle.textContent = '👑 Leader Panel - Full Control';
-            
-            container.innerHTML = result.members.map(member => {
-                let roleDisplay = '';
-                let roleClass = '';
-                
-                if (member.role === 'leader') {
-                    roleDisplay = '👑 LEADER';
-                    roleClass = 'role-leader';
-                } else if (member.role === 'admin') {
-                    roleDisplay = '⚔️ CO-FOUNDER';
-                    roleClass = 'role-admin';
-                } else if (member.role === 'member') {
-                    roleDisplay = '👤 MEMBER';
-                    roleClass = 'role-member';
-                } else if (member.role === 'pending') {
-                    roleDisplay = '⏳ PENDING';
-                    roleClass = 'role-pending';
-                }
-                
-                const canDelete = member.id != currentUser.id && member.role !== 'pending';
-                
-                return `
-                    <div class="pending-card">
-                        <div class="pending-info">
-                            <h3>${member.username} <span class="role-badge ${roleClass}">${roleDisplay}</span></h3>
-                            <p>Email: ${member.email}</p>
-                            <p>Joined: ${new Date(member.created_at).toLocaleDateString()}</p>
-                        </div>
-                        ${canDelete ? `
-                            <div class="pending-actions">
-                                <button class="decline-btn delete-member-btn" data-member-id="${member.id}" data-username="${member.username}">🗑️ Delete</button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
-            attachMembersButtonListeners();
-        } else {
-            section.style.display = 'none';
-            subtitle.textContent = '⚔️ Co-Founder Panel';
-        }
+        container.innerHTML     = '';
     }
 }
 
 // ========================================
-// ADMIN FUNCTIONS
+// ADMIN PANEL - ALL MEMBERS (Leader only)
+// ========================================
+
+async function loadAllMembers() {
+    const result    = await apiCall('getAllMembers', {}, 'GET');
+    const container = document.getElementById('allMembersContainer');
+    const section   = document.getElementById('allMembersSection');
+    const subtitle  = document.getElementById('adminSubtitle');
+    
+    if (!result.success) return;
+
+    const isLeader = result.currentRole === 'leader';
+    
+    if (isLeader) {
+        section.style.display = 'block';
+        subtitle.textContent  = '👑 Leader Panel — Full Control';
+        
+        container.innerHTML = result.members.map(member => {
+            let roleLabel = '👤 Member';
+            let roleClass = 'role-member';
+            
+            if (member.role === 'leader')  { roleLabel = '👑 Leader';     roleClass = 'role-leader';  }
+            if (member.role === 'admin')   { roleLabel = '⚔️ Co-Founder'; roleClass = 'role-admin';   }
+            if (member.role === 'pending') { roleLabel = '⏳ Pending';    roleClass = 'role-pending'; }
+            
+            const canDelete = member.id != currentUser.id && member.role !== 'pending';
+            
+            return `
+                <div class="pending-card">
+                    <div class="pending-card-header">
+                        <div class="pending-avatar">
+                            ${member.avatar
+                                ? `<img src="${member.avatar}" alt="${member.username}">`
+                                : getInitial(member.username)
+                            }
+                        </div>
+                        <div class="pending-meta">
+                            <div class="pending-name">${member.username} <span class="role-badge ${roleClass}">${roleLabel}</span></div>
+                            <div class="pending-email">📧 ${member.email}</div>
+                            <div class="pending-date">🗓 Joined ${formatDate(member.created_at)}</div>
+                        </div>
+                    </div>
+                    ${canDelete ? `
+                        <div class="pending-divider"></div>
+                        <div class="pending-actions">
+                            <button class="decline-btn delete-member-btn" data-member-id="${member.id}" data-username="${member.username}">🗑️ Delete Member</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+        attachMembersButtonListeners();
+    } else {
+        section.style.display = 'none';
+        subtitle.textContent  = '⚔️ Co-Founder Panel';
+    }
+}
+
+// ========================================
+// ADMIN ACTIONS
 // ========================================
 
 async function approveMember(memberId) {
@@ -372,16 +385,11 @@ function renderLeaders() {
     
     container.innerHTML = order.map(i => {
         const leader = allLeaders[i];
-        let role = '';
-        if (leader.role === 'leader') {
-            role = 'Founder';
-        } else {
-            role = 'Co-Founder';
-        }
+        const role   = leader.role === 'leader' ? 'Founder' : 'Co-Founder';
         
         return `
-            <div class="leader-card ${i === 0 ? 'founder-card' : ''}">
-                <div class="leader-card-content ${i === 0 ? 'founder-content' : ''}">
+            <div class="leader-card">
+                <div class="leader-card-content">
                     <img src="${leader.avatar}" alt="${leader.username}" class="leader-image">
                     <h2 class="leader-name">${leader.username}</h2>
                     <p class="leader-role">${role}</p>
@@ -392,9 +400,10 @@ function renderLeaders() {
 }
 
 function renderMembers() {
-    const container = document.getElementById('membersContainer');
+    const container   = document.getElementById('membersContainer');
     const memberCount = document.getElementById('memberCount');
-    
+    const DEFAULT_AVATAR = 'https://scontent.fmnl17-2.fna.fbcdn.net/v/t1.15752-9/614028794_814902111608713_6082913412308559520_n.png?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_ohc=IhuL5cPSz_IQ7kNvwGNekyk&_nc_oc=AdmcTimEiyq7WGiYHgQ2XQ7dL4meLx7Y-GNrLY_qTSNuZxnmHULv_mrm1GfSBzYv2n4&_nc_zt=23&_nc_ht=scontent.fmnl17-2.fna&oh=03_Q7cD4QHwL_9xMqnBXvOjKjJ42VhsBH4jmJcQy4oIS1xBeypYsw&oe=69988514';
+
     memberCount.textContent = allMembers.length;
     
     container.innerHTML = allMembers.map(member => `
@@ -402,7 +411,7 @@ function renderMembers() {
             <div class="member-card-content">
                 <div class="member-avatar">
                     <div class="member-avatar-img">
-                        <img src="${member.avatar || 'https://scontent.fmnl17-2.fna.fbcdn.net/v/t1.15752-9/614028794_814902111608713_6082913412308559520_n.png?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_ohc=IhuL5cPSz_IQ7kNvwGNekyk&_nc_oc=AdmcTimEiyq7WGiYHgQ2XQ7dL4meLx7Y-GNrLY_qTSNuZxnmHULv_mrm1GfSBzYv2n4&_nc_zt=23&_nc_ht=scontent.fmnl17-2.fna&oh=03_Q7cD4QHwL_9xMqnBXvOjKjJ42VhsBH4jmJcQy4oIS1xBeypYsw&oe=69988514'}" alt="${member.username}">
+                        <img src="${member.avatar || DEFAULT_AVATAR}" alt="${member.username}">
                     </div>
                 </div>
                 <h3 class="member-name">${member.username}</h3>
@@ -474,32 +483,28 @@ function setupEventListeners() {
     });
     
     document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
-        const avatar = document.getElementById('profileAvatarPreview').src;
+        const avatar   = document.getElementById('profileAvatarPreview').src;
         const facebook = document.getElementById('facebookInput').value;
-        const youtube = document.getElementById('youtubeInput').value;
-        const tiktok = document.getElementById('tiktokInput').value;
+        const youtube  = document.getElementById('youtubeInput').value;
+        const tiktok   = document.getElementById('tiktokInput').value;
         
         const result = await apiCall('updateProfile', {
             avatar,
             facebook_url: facebook,
-            youtube_url: youtube,
-            tiktok_url: tiktok
+            youtube_url:  youtube,
+            tiktok_url:   tiktok
         });
         
         const messageEl = document.getElementById('profileMessage');
         if (result.success) {
-            messageEl.textContent = '✅ ' + result.message;
-            messageEl.style.color = '#4ade80';
+            messageEl.textContent    = '✅ ' + result.message;
+            messageEl.style.color   = '#4ade80';
             messageEl.style.display = 'block';
-            
             await loadMembers();
-            
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-            }, 3000);
+            setTimeout(() => { messageEl.style.display = 'none'; }, 3000);
         } else {
-            messageEl.textContent = '❌ ' + result.message;
-            messageEl.style.color = '#ff6b6b';
+            messageEl.textContent    = '❌ ' + result.message;
+            messageEl.style.color   = '#ff6b6b';
             messageEl.style.display = 'block';
         }
     });
@@ -513,21 +518,19 @@ function setupEventListeners() {
 }
 
 // ========================================
-// DYNAMIC BUTTON EVENT LISTENERS
+// DYNAMIC BUTTON LISTENERS
 // ========================================
 
 function attachPendingButtonListeners() {
     document.querySelectorAll('.pending-actions .approve-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const memberId = e.target.dataset.memberId;
-            await approveMember(memberId);
+            await approveMember(e.target.dataset.memberId);
         });
     });
     
     document.querySelectorAll('.pending-actions .decline-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const memberId = e.target.dataset.memberId;
-            await declineMember(memberId);
+            await declineMember(e.target.dataset.memberId);
         });
     });
 }
@@ -535,9 +538,7 @@ function attachPendingButtonListeners() {
 function attachMembersButtonListeners() {
     document.querySelectorAll('.delete-member-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const memberId = e.target.dataset.memberId;
-            const username = e.target.dataset.username;
-            await deleteMemberById(memberId, username);
+            await deleteMemberById(e.target.dataset.memberId, e.target.dataset.username);
         });
     });
 }
@@ -547,39 +548,26 @@ function attachMembersButtonListeners() {
 // ========================================
 
 function toggleMobileMenu() {
-    const navLinks = document.getElementById('navLinks');
+    const navLinks  = document.getElementById('navLinks');
     const hamburger = document.getElementById('hamburger');
     navLinks.classList.toggle('active');
     hamburger.textContent = navLinks.classList.contains('active') ? '✕' : '☰';
 }
 
 function navigateTo(page) {
-    document.getElementById('homePage').style.display = 'none';
-    document.getElementById('membersPage').style.display = 'none';
-    document.getElementById('registerPage').style.display = 'none';
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('profilePage').style.display = 'none';
-    document.getElementById('adminPage').style.display = 'none';
+    ['homePage','membersPage','registerPage','loginPage','profilePage','adminPage']
+        .forEach(id => document.getElementById(id).style.display = 'none');
     
     const pageMap = {
-        home: 'homePage',
-        members: 'membersPage',
-        register: 'registerPage',
-        login: 'loginPage',
-        profile: 'profilePage',
-        admin: 'adminPage'
+        home: 'homePage', members: 'membersPage', register: 'registerPage',
+        login: 'loginPage', profile: 'profilePage', admin: 'adminPage'
     };
     
     const pageId = pageMap[page];
-    if (pageId) {
-        document.getElementById(pageId).style.display = 'flex';
-    }
+    if (pageId) document.getElementById(pageId).style.display = 'flex';
     
     document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.page === page) {
-            btn.classList.add('active');
-        }
+        btn.classList.toggle('active', btn.dataset.page === page);
     });
     
     document.getElementById('navLinks').classList.remove('active');
@@ -589,18 +577,15 @@ function navigateTo(page) {
 }
 
 function searchMembers(query) {
-    const cards = document.querySelectorAll('.member-card');
-    const noResults = document.getElementById('noResults');
-    let visibleCount = 0;
+    const cards       = document.querySelectorAll('.member-card');
+    const noResults   = document.getElementById('noResults');
+    let   visibleCount = 0;
     
     cards.forEach(card => {
         const name = card.querySelector('.member-name').textContent.toLowerCase();
-        if (name.includes(query.toLowerCase())) {
-            card.style.display = 'block';
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
-        }
+        const show = name.includes(query.toLowerCase());
+        card.style.display = show ? 'block' : 'none';
+        if (show) visibleCount++;
     });
     
     noResults.style.display = (visibleCount === 0 && query !== '') ? 'block' : 'none';
