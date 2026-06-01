@@ -1,16 +1,1 @@
-{
-  "projectId": "prj_IdMquZ6NFn5MNgxNhFkW99RCvWbf",
-  "orgId": "team_mxBXuzpGJYy27cg5beuf3pb6",
-  "projectName": "rzn-risen",
-  "settings": {
-    "createdAt": 1771764199921,
-    "framework": "express",
-    "devCommand": null,
-    "installCommand": null,
-    "buildCommand": null,
-    "outputDirectory": null,
-    "rootDirectory": null,
-    "directoryListing": false,
-    "nodeVersion": "24.x"
-  }
-}
+{"projectId":"prj_ThRdsHjjWA1kpVWdydlY1nU6PONq","orgId":"team_mxBXuzpGJYy27cg5beuf3pb6","projectName":"risen-rzn"}
