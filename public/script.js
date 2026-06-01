@@ -30,11 +30,23 @@ async function apiCall(endpoint, data = {}, method = 'POST') {
     
     try {
         const response = await fetch(`/api/${endpoint}`, options);
-        return await response.json();
-    } catch (error) {
-        console.error(`API call failed for ${endpoint}:`, error);
-        return { success: false, message: 'Server connection failed. Make sure the server is running.' };
+
+    if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('rzn_auth_token');
+        localStorage.removeItem('rzn_user');
+        authToken = null;
+        currentUser = null;
+        updateAuthUI();
+        navigateTo('login');
+        return { success: false, message: 'Session expired. Please log in again.' };
     }
+
+    const body = await response.json();
+    return body;
+  } catch (error) {
+    console.error(`API call failed for ${endpoint}:`, error);
+    return { success: false, message: 'Server connection failed. Make sure the server is running.' };
+  }
 }
 
 // ========================================
@@ -216,10 +228,34 @@ function loadProfileData() {
         roleField.style.display = 'none';
     }
     
+    const DEFAULT_COVER = 'https://images.unsplash.com/photo-1511755239777-2e6f12f6b3e5?auto=format&fit=crop&w=1400&q=80';
+
+    document.getElementById('profileCoverPreview').src = currentUser.cover_url || DEFAULT_COVER;
     document.getElementById('profileAvatarPreview').src = currentUser.avatar || DEFAULT_AVATAR;
-    document.getElementById('facebookInput').value = currentUser.facebook_url || '';
-    document.getElementById('youtubeInput').value  = currentUser.youtube_url  || '';
-    document.getElementById('tiktokInput').value   = currentUser.tiktok_url   || '';
+    document.getElementById('profileLikes').textContent = formatHeartText(currentUser.likes || 0);
+
+    const fbLink = document.getElementById('profileFacebookLink');
+    const ytLink = document.getElementById('profileYoutubeLink');
+    const ttLink = document.getElementById('profileTiktokLink');
+
+    if (currentUser.facebook_url) {
+        fbLink.style.display = 'inline-block';
+        fbLink.href = currentUser.facebook_url;
+    } else {
+        fbLink.style.display = 'none';
+    }
+    if (currentUser.youtube_url) {
+        ytLink.style.display = 'inline-block';
+        ytLink.href = currentUser.youtube_url;
+    } else {
+        ytLink.style.display = 'none';
+    }
+    if (currentUser.tiktok_url) {
+        ttLink.style.display = 'inline-block';
+        ttLink.href = currentUser.tiktok_url;
+    } else {
+        ttLink.style.display = 'none';
+    }
 }
 
 // ========================================
@@ -240,7 +276,12 @@ async function loadPendingMembers() {
     const container = document.getElementById('pendingContainer');
     const noPending = document.getElementById('noPending');
     
-    if (result.success && result.pending.length > 0) {
+    if (!result.success) {
+        alert(result.message || 'Unable to load pending members.');
+        return;
+    }
+
+    if (result.pending.length > 0) {
         noPending.style.display = 'none';
         container.innerHTML = result.pending.map(member => `
             <div class="pending-card">
@@ -281,7 +322,10 @@ async function loadAllMembers() {
     const section   = document.getElementById('allMembersSection');
     const subtitle  = document.getElementById('adminSubtitle');
     
-    if (!result.success) return;
+    if (!result.success) {
+        alert(result.message || 'Unable to load members.');
+        return;
+    }
 
     const isLeader = result.currentRole === 'leader';
     
@@ -415,23 +459,159 @@ function renderMembers() {
                     </div>
                 </div>
                 <h3 class="member-name">${member.username}</h3>
-                <div class="member-socials">
-                    <a href="${member.facebook_url || '#'}" class="social-link social-facebook" title="Facebook" target="_blank">
-                        <span class="social-icon">f</span>
-                        <span class="social-text">Facebook</span>
-                    </a>
-                    <a href="${member.youtube_url || '#'}" class="social-link social-youtube" title="YouTube" target="_blank">
-                        <span class="social-icon">▶️</span>
-                        <span class="social-text">YouTube</span>
-                    </a>
-                    <a href="${member.tiktok_url || '#'}" class="social-link social-tiktok" title="TikTok" target="_blank">
-                        <span class="social-icon">♪</span>
-                        <span class="social-text">TikTok</span>
-                    </a>
+                <div class="member-interaction">
+                    <span class="member-likes">${formatHeartText(member.likes || 0)}</span>
+                    <button class="like-btn" data-member-id="${member.id}">Like</button>
                 </div>
+                <button class="view-profile-btn" data-member-id="${member.id}">View Profile</button>
             </div>
         </div>
     `).join('');
+
+    attachMemberCardListeners();
+}
+
+function attachMemberCardListeners() {
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async (event) => {
+            const memberId = event.currentTarget.dataset.memberId;
+            await likeMember(memberId);
+        });
+    });
+
+    document.querySelectorAll('.view-profile-btn').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+            const memberId = event.currentTarget.dataset.memberId;
+            showMemberProfile(memberId);
+        });
+    });
+}
+
+async function likeMember(memberId) {
+    if (!currentUser || !authToken) {
+        alert('You need to be logged in to like members.');
+        return;
+    }
+
+    const result = await apiCall('likeMember', { member_id: memberId });
+    if (result.success) {
+        const updated = allMembers.map(m => {
+            if (String(m.id) === String(memberId)) {
+                return { ...m, likes: result.likes };
+            }
+            return m;
+        });
+
+        allMembers = updated;
+        renderMembers();
+
+        if (currentUser.id === Number(memberId)) {
+            currentUser.likes = result.likes;
+            document.getElementById('profileLikes').textContent = currentUser.likes;
+        }
+    } else {
+        alert(result.message || 'Unable to like member');
+    }
+}
+
+function formatHeartText(count) {
+    const label = count === 1 ? 'heart' : 'hearts';
+    return `❤️ ${count} ${label}`;
+}
+
+function showMemberProfile(memberId) {
+    const member = allMembers.find(m => String(m.id) === String(memberId));
+    if (!member) return;
+
+    const DEFAULT_COVER = 'https://images.unsplash.com/photo-1511755239777-2e6f12f6b3e5?auto=format&fit=crop&w=1400&q=80';
+
+    document.getElementById('detailName').textContent = member.username;
+    document.getElementById('detailRole').textContent = member.role ? `Role: ${member.role}` : '';
+    document.getElementById('detailCover').src = member.cover_url || DEFAULT_COVER;
+    document.getElementById('detailLikes').textContent = formatHeartText(member.likes || 0);
+    document.getElementById('detailAvatar').src = member.avatar || 'https://scontent.fmnl17-2.fna.fbcdn.net/v/t1.15752-9/614028794_814902111608713_6082913412308559520_n.png?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_ohc=IhuL5cPSz_IQ7kNvwGNekyk&_nc_oc=AdmcTimEiyq7WGiYHgQ2XQ7dL4meLx7Y-GNrLY_qTSNuZxnmHULv_mrm1GfSBzYv2n4&_nc_zt=23&_nc_ht=scontent.fmnl17-2.fna&oh=03_Q7cD4QHwL_9xMqnBXvOjKjJ42VhsBH4jmJcQy4oIS1xBeypYsw&oe=69988514';
+
+    document.getElementById('detailLikes').textContent = formatHeartText(member.likes || 0);
+
+    const linksContainer = document.getElementById('detailSocialLinks');
+    linksContainer.innerHTML = '';
+
+    if (member.facebook_url) {
+        linksContainer.insertAdjacentHTML('beforeend', `<a href="${member.facebook_url}" target="_blank" class="social-link">Facebook</a>`);
+    }
+    if (member.youtube_url) {
+        linksContainer.insertAdjacentHTML('beforeend', `<a href="${member.youtube_url}" target="_blank" class="social-link">YouTube</a>`);
+    }
+    if (member.tiktok_url) {
+        linksContainer.insertAdjacentHTML('beforeend', `<a href="${member.tiktok_url}" target="_blank" class="social-link">TikTok</a>`);
+    }
+
+    navigateTo('memberDetail');
+}
+
+function showAddLinkModal() {
+    const modal = document.getElementById('linkModal');
+    const inputSection = document.getElementById('dialogInputSection');
+    inputSection.style.display = 'none';
+    document.getElementById('platformLinkInput').value = '';
+    modal.style.display = 'flex';
+}
+
+function closeAddLinkModal() {
+    document.getElementById('linkModal').style.display = 'none';
+}
+
+function pickPlatformAndEdit(platform) {
+    const inputSection = document.getElementById('dialogInputSection');
+    const input = document.getElementById('platformLinkInput');
+    input.value = currentUser && currentUser[`${platform}_url`] ? currentUser[`${platform}_url`] : '';
+    input.dataset.platform = platform;
+    inputSection.style.display = 'flex';
+    input.focus();
+}
+
+async function savePlatformLink() {
+    const input = document.getElementById('platformLinkInput');
+    const platform = input.dataset.platform;
+    const url = input.value.trim();
+
+    if (!platform || !url) {
+        alert('Please choose a platform and enter a valid URL.');
+        return;
+    }
+
+    const body = {
+        avatar: document.getElementById('profileAvatarPreview').src,
+        cover_url: document.getElementById('profileCoverPreview').src,
+        facebook_url: currentUser?.facebook_url || '',
+        youtube_url: currentUser?.youtube_url  || '',
+        tiktok_url: currentUser?.tiktok_url   || ''
+    };
+
+    body[`${platform}_url`] = url;
+
+    if (currentUser) {
+        currentUser.facebook_url = body.facebook_url;
+        currentUser.youtube_url = body.youtube_url;
+        currentUser.tiktok_url = body.tiktok_url;
+    }
+
+    const result = await apiCall('updateProfile', body);
+    if (result.success) {
+        if (currentUser) {
+            currentUser[`${platform}_url`] = url;
+            currentUser.cover_url = document.getElementById('profileCoverPreview').src;
+        }
+
+        loadProfileData();
+        closeAddLinkModal();
+        document.getElementById('profileMessage').textContent = '✅ Link updated successfully';
+        document.getElementById('profileMessage').style.color = '#4ade80';
+        document.getElementById('profileMessage').style.display = 'block';
+        setTimeout(() => { document.getElementById('profileMessage').style.display = 'none'; }, 3000);
+    } else {
+        alert(result.message || 'Failed to save link');
+    }
 }
 
 // ========================================
@@ -471,6 +651,17 @@ function setupEventListeners() {
         loadAllMembers();
     });
     
+    document.getElementById('coverUpload')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('profileCoverPreview').src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
     document.getElementById('avatarUpload')?.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -483,16 +674,22 @@ function setupEventListeners() {
     });
     
     document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
-        const avatar   = document.getElementById('profileAvatarPreview').src;
-        const facebook = document.getElementById('facebookInput').value;
-        const youtube  = document.getElementById('youtubeInput').value;
-        const tiktok   = document.getElementById('tiktokInput').value;
-        
+        if (!currentUser) {
+            alert('Please login first.');
+            return;
+        }
+
+        const avatar = document.getElementById('profileAvatarPreview').src;
+        const cover_url = document.getElementById('profileCoverPreview').src;
+        currentUser.avatar = avatar;
+        currentUser.cover_url = cover_url;
+
         const result = await apiCall('updateProfile', {
             avatar,
-            facebook_url: facebook,
-            youtube_url:  youtube,
-            tiktok_url:   tiktok
+            cover_url,
+            facebook_url: currentUser.facebook_url || '',
+            youtube_url:  currentUser.youtube_url || '',
+            tiktok_url:   currentUser.tiktok_url || ''
         });
         
         const messageEl = document.getElementById('profileMessage');
@@ -508,6 +705,15 @@ function setupEventListeners() {
             messageEl.style.display = 'block';
         }
     });
+
+    document.getElementById('addLinkBtn')?.addEventListener('click', () => showAddLinkModal());
+    document.getElementById('dialogCloseBtn')?.addEventListener('click', closeAddLinkModal);
+    document.getElementById('dialogSaveLinkBtn')?.addEventListener('click', savePlatformLink);
+    document.querySelectorAll('.dialog-option-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            pickPlatformAndEdit(e.currentTarget.dataset.platform);
+        });
+    });
     
     document.querySelectorAll('.link-text').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -515,7 +721,12 @@ function setupEventListeners() {
             navigateTo(e.target.dataset.page);
         });
     });
+
+    document.getElementById('memberDetailBackBtn')?.addEventListener('click', () => {
+        navigateTo('members');
+    });
 }
+
 
 // ========================================
 // DYNAMIC BUTTON LISTENERS
@@ -555,12 +766,12 @@ function toggleMobileMenu() {
 }
 
 function navigateTo(page) {
-    ['homePage','membersPage','registerPage','loginPage','profilePage','adminPage']
+    ['homePage','membersPage','registerPage','loginPage','profilePage','adminPage','memberDetailPage']
         .forEach(id => document.getElementById(id).style.display = 'none');
     
     const pageMap = {
         home: 'homePage', members: 'membersPage', register: 'registerPage',
-        login: 'loginPage', profile: 'profilePage', admin: 'adminPage'
+        login: 'loginPage', profile: 'profilePage', admin: 'adminPage', memberDetail: 'memberDetailPage'
     };
     
     const pageId = pageMap[page];

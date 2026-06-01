@@ -97,9 +97,11 @@ export default async function handler(req, res) {
         username: user.username,
         role: user.role,
         avatar: user.avatar,
+        cover_url: user.cover_url,
         facebook_url: user.facebook_url,
         youtube_url: user.youtube_url,
-        tiktok_url: user.tiktok_url
+        tiktok_url: user.tiktok_url,
+        likes: user.likes || 0
       }
     });
 

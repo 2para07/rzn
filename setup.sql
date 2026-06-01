@@ -9,12 +9,17 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   role VARCHAR(50) DEFAULT 'member',
   avatar TEXT,
+  cover_url TEXT,
   facebook_url TEXT,
   youtube_url TEXT,
   tiktok_url TEXT,
+  likes INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Backfill likes on existing user table if missing
+ALTER TABLE users ADD COLUMN IF NOT EXISTS likes INTEGER DEFAULT 0;
 
 -- Create activity_log table
 CREATE TABLE IF NOT EXISTS activity_log (

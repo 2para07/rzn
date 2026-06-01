@@ -20,6 +20,7 @@
                 <div class="nav-links" id="navLinks">
                     <button class="nav-btn active" data-page="home">🏠 Home</button>
                     <button class="nav-btn" data-page="members">👥 Members</button>
+                    <a class="nav-btn" href="https://a2p-fpstrick.vercel.app/" target="_blank" rel="noopener noreferrer">📤 Upload Method</a>
                     <button class="nav-btn" data-page="login" id="loginNavBtn">🔐 Login</button>
                     <button class="nav-btn" data-page="register" id="registerNavBtn">📝 Register</button>
                     <button class="nav-btn" data-page="profile" id="profileNavBtn" style="display: none;">👤 My Profile</button>
@@ -59,6 +60,8 @@
                     <p>❌ No members found matching your search</p>
                 </div>
             </div>
+
+
         </div>
 
         <!-- Register Page -->
@@ -117,7 +120,14 @@
             <div class="profile-container">
                 <h1 class="profile-title">👤 My Profile</h1>
                 <div class="profile-card">
-                    <div class="profile-avatar-section">
+                    <div class="cover-photo-section">
+                    <img id="profileCoverPreview" class="profile-cover" src="https://images.unsplash.com/photo-1511755239777-2e6f12f6b3e5?auto=format&fit=crop&w=1400&q=80" alt="Cover Photo">
+                    <label class="cover-upload-label">
+                        📸 Change Cover Photo
+                        <input type="file" id="coverUpload" accept="image/*" class="cover-upload-input">
+                    </label>
+                </div>
+                <div class="profile-avatar-section">
                         <img id="profileAvatarPreview" class="profile-avatar" src="https://scontent.fmnl17-2.fna.fbcdn.net/v/t1.15752-9/614028794_814902111608713_6082913412308559520_n.png?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_ohc=IhuL5cPSz_IQ7kNvwGNekyk&_nc_oc=AdmcTimEiyq7WGiYHgQ2XQ7dL4meLx7Y-GNrLY_qTSNuZxnmHULv_mrm1GfSBzYv2n4&_nc_zt=23&_nc_ht=scontent.fmnl17-2.fna&oh=03_Q7cD4QHwL_9xMqnBXvOjKjJ42VhsBH4jmJcQy4oIS1xBeypYsw&oe=69988514" alt="Profile Avatar">
                         <label class="avatar-upload-label">
                             📷 Change Avatar
@@ -129,29 +139,65 @@
                             <label>Member Name:</label>
                             <p id="profileName"></p>
                         </div>
+                        <div class="info-field">
+                            <label>Total Likes:</label>
+                            <p id="profileLikes">0</p>
+                        </div>
                         <div class="info-field" id="profileRoleField" style="display: none;">
                             <label>Role:</label>
                             <p id="profileRole" style="color: #ffd700; font-size: 1.1rem;"></p>
                         </div>
                         <div class="social-customization">
                             <h3>Social Media Links</h3>
-                            <div class="social-field">
-                                <label>Facebook URL:</label>
-                                <input type="url" id="facebookInput" class="social-input" placeholder="https://facebook.com/...">
-                            </div>
-                            <div class="social-field">
-                                <label>YouTube URL:</label>
-                                <input type="url" id="youtubeInput" class="social-input" placeholder="https://youtube.com/...">
-                            </div>
-                            <div class="social-field">
-                                <label>TikTok URL:</label>
-                                <input type="url" id="tiktokInput" class="social-input" placeholder="https://tiktok.com/@...">
+                            <p style="color:#c9b8a8; margin-bottom: 0.75rem;">Use "➕ Add Link" to add or edit your profile social links.</p>
+                            <div class="profile-social-links" id="profileSocialLinks">
+                                <a id="profileFacebookLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Facebook</a>
+                                <a id="profileYoutubeLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">YouTube</a>
+                                <a id="profileTiktokLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">TikTok</a>
                             </div>
                         </div>
                         <div class="profile-buttons">
+                            <button id="addLinkBtn" class="save-btn">➕ Add Link</button>
                             <button id="saveProfileBtn" class="save-btn">💾 Save Profile</button>
                         </div>
                         <p class="profile-message" id="profileMessage" style="display: none;"></p>
+                    </div>
+                </div>
+
+                <div id="linkModal" class="dialog-modal" style="display: none;">
+                    <div class="dialog-card">
+                        <h3>Select Link Type</h3>
+                        <div class="dialog-buttons">
+                            <button class="dialog-option-btn" data-platform="facebook">Facebook</button>
+                            <button class="dialog-option-btn" data-platform="youtube">YouTube</button>
+                            <button class="dialog-option-btn" data-platform="tiktok">TikTok</button>
+                        </div>
+                        <div class="dialog-input" style="display: none;" id="dialogInputSection">
+                            <input id="platformLinkInput" class="social-input" placeholder="Paste profile URL..." />
+                            <button id="dialogSaveLinkBtn" class="save-btn">Save</button>
+                        </div>
+                        <button id="dialogCloseBtn" class="close-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Detail Page -->
+        <div id="memberDetailPage" class="page-container profile-page" style="display: none;">
+            <div class="profile-container member-detail-container">
+                <button id="memberDetailBackBtn" class="nav-btn" style="margin-bottom: 1rem;">← Back to Members</button>
+                <div class="member-detail-cover-wrapper">
+                    <img id="detailCover" class="member-detail-cover" src="https://images.unsplash.com/photo-1511755239777-2e6f12f6b3e5?auto=format&fit=crop&w=1400&q=80" alt="Cover Photo">
+                </div>
+                <div class="member-detail-card">
+                    <div class="member-detail-text">
+                        <h2 id="detailName" class="profile-title">Member Name</h2>
+                        <p id="detailRole" style="color:#ffd700; font-weight: 700;"></p>
+                        <p id="detailLikes" style="margin-top:.8rem;"></p>
+                        <div class="profile-social-links" id="detailSocialLinks"></div>
+                    </div>
+                    <div class="member-detail-avatar">
+                        <img id="detailAvatar" class="profile-avatar" src="" alt="Member Avatar">
                     </div>
                 </div>
             </div>

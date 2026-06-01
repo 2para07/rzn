@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     // Leader sees all members
     if (decoded.role === 'leader') {
       query = `
-        SELECT id, username, email, avatar, role, created_at 
+        SELECT id, username, email, avatar, cover_url, role, created_at, COALESCE(likes, 0) AS likes 
         FROM users 
         ORDER BY 
           CASE role 
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     } else {
       // Admin only sees members and pending
       query = `
-        SELECT id, username, email, avatar, role, created_at 
+        SELECT id, username, email, avatar, cover_url, role, created_at 
         FROM users 
         WHERE role IN ('member', 'pending') 
         ORDER BY created_at DESC
@@ -75,6 +75,11 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Get all members error:', error);
+
+    if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ success: false, message: 'Authentication required. Please login again.' });
+    }
+
     return res.status(500).json({ 
       success: false, 
       message: 'Server error' 

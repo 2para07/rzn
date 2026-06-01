@@ -23,6 +23,7 @@ import approveHandler from './approve.js';
 import declineHandler from './decline.js';
 import deleteMemberHandler from './deleteMember.js';
 import updateProfileHandler from './updateProfile.js';
+import likeMemberHandler from './likeMember.js';
 import dbTestHandler from './api/db-test.js';
 
 // API Routes
@@ -36,6 +37,7 @@ app.post('/api/approve', approveHandler);
 app.post('/api/decline', declineHandler);
 app.post('/api/deleteMember', deleteMemberHandler);
 app.post('/api/updateProfile', updateProfileHandler);
+app.post('/api/likeMember', likeMemberHandler);
 app.get('/api/db-test', dbTestHandler);
 
 // Serve index.html
@@ -43,6 +45,10 @@ app.get('*', (req, res) => {
   res.sendFile(join(dirname(fileURLToPath(import.meta.url)), 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 RZN Risen server running on http://localhost:${PORT}`);
-});
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 RZN Risen server running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;

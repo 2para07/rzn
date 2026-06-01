@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   try {
     const result = await pool.query(`
-      SELECT id, username, avatar, facebook_url, youtube_url, tiktok_url, role 
+      SELECT id, username, avatar, cover_url, facebook_url, youtube_url, tiktok_url, role, COALESCE(likes, 0) AS likes 
       FROM users 
       WHERE role IN ('leader', 'admin', 'member') 
       ORDER BY 

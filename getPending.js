@@ -53,6 +53,11 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Get pending error:', error);
+
+    if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ success: false, message: 'Authentication required. Please login again.' });
+    }
+
     return res.status(500).json({ 
       success: false, 
       message: 'Server error' 
