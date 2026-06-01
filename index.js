@@ -51,4 +51,8 @@ if (process.env.VERCEL !== '1') {
   });
 }
 
-export default app;
+// Vercel expects a default export that is a function(request, response).
+// Export a request handler which forwards to the Express `app` instance.
+export default function handler(req, res) {
+  return app(req, res);
+}
