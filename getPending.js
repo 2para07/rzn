@@ -33,16 +33,17 @@ export default async function handler(req, res) {
 
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-this');
+    const role = String(decoded.role || '').toLowerCase();
 
     // Check if admin or leader
-    if (decoded.role !== 'admin' && decoded.role !== 'leader') {
+    if (role !== 'admin' && role !== 'leader') {
       return res.status(403).json({ success: false, message: 'Admin access required' });
     }
 
     const result = await pool.query(`
       SELECT id, username, email, avatar, created_at 
       FROM users 
-      WHERE role = 'pending' 
+      WHERE LOWER(role) = 'pending' 
       ORDER BY created_at DESC
     `);
 

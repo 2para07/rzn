@@ -34,20 +34,22 @@ export default async function handler(req, res) {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-this');
 
+    const role = String(decoded.role || '').toLowerCase();
+
     // Check if admin or leader
-    if (decoded.role !== 'admin' && decoded.role !== 'leader') {
+    if (role !== 'admin' && role !== 'leader') {
       return res.status(403).json({ success: false, message: 'Admin access required' });
     }
 
     let query;
     
     // Leader sees all members
-    if (decoded.role === 'leader') {
+    if (role === 'leader') {
       query = `
         SELECT id, username, email, avatar, cover_url, role, created_at, COALESCE(likes, 0) AS likes 
         FROM users 
         ORDER BY 
-          CASE role 
+          CASE LOWER(role) 
             WHEN 'leader' THEN 1 
             WHEN 'admin' THEN 2 
             WHEN 'member' THEN 3 
@@ -60,7 +62,7 @@ export default async function handler(req, res) {
       query = `
         SELECT id, username, email, avatar, cover_url, role, created_at 
         FROM users 
-        WHERE role IN ('member', 'pending') 
+        WHERE LOWER(role) IN ('member', 'pending') 
         ORDER BY created_at DESC
       `;
     }
@@ -70,7 +72,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       success: true, 
       members: result.rows,
-      currentRole: decoded.role
+      currentRole: role
     });
 
   } catch (error) {

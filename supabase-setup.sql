@@ -93,7 +93,13 @@ VALUES
   (43, 2, 'logout', '2026-01-23 12:25:04')
 ON CONFLICT (id) DO NOTHING;
 
+-- Normalize role values to lowercase so the front-end and API filters match correctly
+UPDATE users
+SET role = LOWER(role)
+WHERE role != LOWER(role);
+
 -- Verify data was inserted
 SELECT COUNT(*) as user_count FROM users;
 SELECT COUNT(*) as activity_count FROM activity_log;
+SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY role;
 SELECT 'Setup Complete with all existing members!' as status;

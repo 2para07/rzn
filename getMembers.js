@@ -27,9 +27,9 @@ export default async function handler(req, res) {
     const result = await pool.query(`
       SELECT id, username, avatar, cover_url, facebook_url, youtube_url, tiktok_url, role, COALESCE(likes, 0) AS likes 
       FROM users 
-      WHERE role IN ('leader', 'admin', 'member') 
+      WHERE LOWER(role) IN ('leader', 'admin', 'member') 
       ORDER BY 
-        CASE role 
+        CASE LOWER(role) 
           WHEN 'leader' THEN 1 
           WHEN 'admin' THEN 2 
           WHEN 'member' THEN 3 
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ 
       success: true, 
-      members: result.rows 
+      members: result.rows || [] 
     });
 
   } catch (error) {

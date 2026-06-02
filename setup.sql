@@ -48,6 +48,11 @@ VALUES (
 )
 ON CONFLICT (username) DO NOTHING;
 
+-- Normalize role values to lowercase so the API filters work correctly
+UPDATE users
+SET role = LOWER(role)
+WHERE role != LOWER(role);
+
 -- Verify tables were created
 SELECT 'Setup Complete!' as status;
 

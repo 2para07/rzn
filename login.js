@@ -55,6 +55,7 @@ export default async function handler(req, res) {
     }
 
     const user = result.rows[0];
+    const role = String(user.role || '').toLowerCase();
 
     // Verify password
     const validPassword = await bcrypt.compare(password, user.password);
@@ -65,7 +66,7 @@ export default async function handler(req, res) {
       });
     }
 
-    if (user.role === 'pending') {
+    if (role === 'pending') {
       return res.status(403).json({ 
         success: false, 
         message: 'Your account is pending approval by administrators' 
@@ -77,7 +78,7 @@ export default async function handler(req, res) {
       { 
         id: user.id, 
         username: user.username, 
-        role: user.role 
+        role 
       },
       process.env.JWT_SECRET || 'your-secret-key-change-this',
       { expiresIn: '7d' }
@@ -95,7 +96,7 @@ export default async function handler(req, res) {
       user: {
         id: user.id,
         username: user.username,
-        role: user.role,
+        role,
         avatar: user.avatar,
         cover_url: user.cover_url,
         facebook_url: user.facebook_url,

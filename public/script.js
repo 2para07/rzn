@@ -93,7 +93,8 @@ function updateAuthUI() {
         profileNavBtn.style.display  = 'block';
         logoutBtn.style.display      = 'block';
         
-        if (currentUser.role === 'admin' || currentUser.role === 'leader') {
+        const userRole = String(currentUser.role || '').toLowerCase();
+        if (userRole === 'admin' || userRole === 'leader') {
             adminNavBtn.style.display = 'block';
         }
     } else {
@@ -216,11 +217,12 @@ function loadProfileData() {
     const roleField = document.getElementById('profileRoleField');
     const roleEl    = document.getElementById('profileRole');
 
-    if (currentUser.role === 'leader') {
+    const userRole = String(currentUser.role || '').toLowerCase();
+    if (userRole === 'leader') {
         roleEl.textContent    = '👑 LEADER';
         roleEl.style.color    = '#ffd700';
         roleField.style.display = 'flex';
-    } else if (currentUser.role === 'admin') {
+    } else if (userRole === 'admin') {
         roleEl.textContent    = '⚔️ CO-FOUNDER';
         roleEl.style.color    = '#c0c0c0';
         roleField.style.display = 'flex';
@@ -327,7 +329,7 @@ async function loadAllMembers() {
         return;
     }
 
-    const isLeader = result.currentRole === 'leader';
+    const isLeader = String(result.currentRole || '').toLowerCase() === 'leader';
     
     if (isLeader) {
         section.style.display = 'block';
@@ -337,9 +339,10 @@ async function loadAllMembers() {
             let roleLabel = '👤 Member';
             let roleClass = 'role-member';
             
-            if (member.role === 'leader')  { roleLabel = '👑 Leader';     roleClass = 'role-leader';  }
-            if (member.role === 'admin')   { roleLabel = '⚔️ Co-Founder'; roleClass = 'role-admin';   }
-            if (member.role === 'pending') { roleLabel = '⏳ Pending';    roleClass = 'role-pending'; }
+            const memberRole = String(member.role || '').toLowerCase();
+            if (memberRole === 'leader')  { roleLabel = '👑 Leader';     roleClass = 'role-leader';  }
+            if (memberRole === 'admin')   { roleLabel = '⚔️ Co-Founder'; roleClass = 'role-admin';   }
+            if (memberRole === 'pending') { roleLabel = '⏳ Pending';    roleClass = 'role-pending'; }
             
             const canDelete = member.id != currentUser.id && member.role !== 'pending';
             
@@ -425,16 +428,17 @@ function renderLeaders() {
     const container = document.getElementById('leadersContainer');
     if (allLeaders.length === 0) return;
     
-    const order = allLeaders.length >= 3 ? [1, 0, 2] : [0];
+    const order = allLeaders.length === 3 ? [1, 0, 2] : allLeaders.map((_, index) => index);
     
     container.innerHTML = order.map(i => {
         const leader = allLeaders[i];
-        const role   = leader.role === 'leader' ? 'Founder' : 'Co-Founder';
+        const role   = leader.role?.toLowerCase() === 'leader' ? 'Founder' : 'Co-Founder';
+        const avatar = leader.avatar || 'https://scontent.fmnl17-2.fna.fbcdn.net/v/t1.15752-9/614028794_814902111608713_6082913412308559520_n.png?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_ohc=IhuL5cPSz_IQ7kNvwGNekyk&_nc_oc=AdmcTimEiyq7WGiYHgQ2XQ7dL4meLx7Y-GNrLY_qTSNuZxnmHULv_mrm1GfSBzYv2n4&_nc_zt=23&_nc_ht=scontent.fmnl17-2.fna&oh=03_Q7cD4QHwL_9xMqnBXvOjKjJ42VhsBH4jmJcQy4oIS1xBeypYsw&oe=69988514';
         
         return `
             <div class="leader-card">
                 <div class="leader-card-content">
-                    <img src="${leader.avatar}" alt="${leader.username}" class="leader-image">
+                    <img src="${avatar}" alt="${leader.username}" class="leader-image">
                     <h2 class="leader-name">${leader.username}</h2>
                     <p class="leader-role">${role}</p>
                 </div>
